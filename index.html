@@ -4,11 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colisión de objetos canvas</title>
+    <title>Interacción de objetos canvas</title>
+    <style>
+        #canvas-container {
+            position: relative;
+        }
+
+        #canvas {
+            background-color: #ff8;
+        }
+
+        #coordenadas {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: Arial;
+            font-size: 16px;
+            color: black;
+        }
+    </style>
 </head>
 
 <body>
-    <canvas id="canvas"></canvas>
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+        <div id="coordenadas">X: 0, Y: 0</div>
+    </div>
 
     <script src="js/main.js"></script>
 </body>

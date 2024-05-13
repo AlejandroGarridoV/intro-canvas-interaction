@@ -119,4 +119,55 @@ let updateCircles = function (timestamp) {
     requestAnimationFrame(updateCircles);
 }
 
+
 updateCircles(); // Inicia la animación de los círculos
+
+
+canvas.addEventListener('click', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Itera sobre los círculos para comprobar si se hizo clic en alguno
+    for (let i = 0; i < arrayCircle.length; i++) {
+        const circle = arrayCircle[i];
+        const distance = Math.sqrt((mouseX - circle.posx) ** 2 + (mouseY - circle.posy) ** 2);
+        
+        // Si la distancia entre el punto del clic y el centro del círculo es menor que el radio,
+        // entonces se hizo clic dentro del círculo
+        if (distance <= circle.radius) {
+            // Elimina el círculo del array
+            arrayCircle.splice(i, 1);
+            // Detiene el bucle ya que eliminamos un círculo
+            break;
+        }
+    }
+});
+
+// Listener para obtener las coordenadas del ratón
+let mouseX = 0;
+let mouseY = 0;
+
+canvas.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = event.clientX - rect.left;
+    mouseY = event.clientY - rect.top;
+    
+    // Limpia el canvas antes de dibujar las nuevas coordenadas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dibuja las coordenadas en el canvas
+    drawCoordinates();
+
+    // Muestra las coordenadas en el elemento HTML
+    document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
+});
+
+// Función para dibujar el cuadro de texto de coordenadas en el canvas
+function drawCoordinates() {
+    ctx.fillStyle = 'black';
+    ctx.font = '16px Arial';
+    ctx.fillText('X: ' + mouseX, 20, 20);
+    ctx.fillText('Y: ' + mouseY, 20, 40);
+}
+
