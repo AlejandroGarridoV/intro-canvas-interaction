@@ -122,6 +122,7 @@ let updateCircles = function (timestamp) {
 
 updateCircles(); // Inicia la animación de los círculos
 
+let puntaje = 0; // Inicializa el puntaje en 0
 
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect();
@@ -138,11 +139,16 @@ canvas.addEventListener('click', function(event) {
         if (distance <= circle.radius) {
             // Elimina el círculo del array
             arrayCircle.splice(i, 1);
-            // Detiene el bucle ya que eliminamos un círculo
+            // Incrementa y muestra el puntaje
+            puntaje++;
+            document.getElementById("puntaje").innerText = `Puntaje: ${parseInt(puntaje)}`; // Asegura que puntaje sea tratado como un número
             break;
         }
     }
 });
+
+
+
 
 // Listener para obtener las coordenadas del ratón
 let mouseX = 0;
