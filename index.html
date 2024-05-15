@@ -6,12 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interacción de objetos canvas</title>
     <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
         #canvas-container {
             position: relative;
+            width: 100%;
+            height: 100%;
         }
 
         #canvas {
-            background-color: #87CEFA; /* Fondo azul claro */
+            background-color: #87CEFA;
+            /* Fondo azul claro */
+            display: block;
+            z-index: 1;
         }
 
         #coordenadas {
@@ -21,6 +35,8 @@
             font-family: Arial;
             font-size: 16px;
             color: black;
+            z-index: 3;
+            /* Modificado a un valor mayor */
         }
 
         #puntaje {
@@ -30,6 +46,34 @@
             font-family: Arial;
             font-size: 16px;
             color: black;
+            z-index: 3;
+            /* Modificado a un valor mayor */
+        }
+
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial;
+            font-size: 40px;
+            color: red;
+            text-align: center;
+            z-index: 2;
+            /* Modificado a un valor mayor */
+        }
+
+        #subinstructions {
+            position: absolute;
+            top: calc(50% + 50px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial;
+            font-size: 20px;
+            color: black;
+            text-align: center;
+            z-index: 2;
+            /* Modificado a un valor mayor */
         }
     </style>
 </head>
@@ -39,19 +83,26 @@
         <canvas id="canvas"></canvas>
         <div id="coordenadas">X: 0, Y: 0</div>
         <div id="puntaje">Puntaje: 0</div>
+        <div id="instructions">Mantén tu puntaje positivo</div>
+        <div id="subinstructions">Haz clic a las burbujas</div>
     </div>
 
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
-        const window_height = window.innerHeight;
-        const window_width = window.innerWidth;
+        // Función para ajustar el tamaño del canvas al tamaño de la ventana del navegador
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
 
-        canvas.height = window_height;
-        canvas.width = window_width;
-
-        canvas.style.backgroundColor = "#87CEFA"; /* Fondo azul claro */
+        // Llamar a la función para ajustar el tamaño del canvas al cargar y al cambiar el tamaño de la ventana
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            updateCircles(); // Iniciar la animación
+        });
+        window.addEventListener('resize', resizeCanvas);
 
         class Circle {
             constructor(x, y, radius, color, text, speed) {
@@ -64,22 +115,62 @@
                 this.dx = 0; // Los círculos no tienen velocidad horizontal
                 this.dy = -this.speed; // La velocidad vertical es negativa para que se muevan hacia arriba
                 this.colliding = false;
+                this.shadowOffset = 0;
             }
 
             draw(context) {
-                context.beginPath();
-                context.fillStyle = "#ffffff"; /* Color blanco */
-                context.shadowColor = "#ffffff"; /* Sombra blanca */
-                context.shadowBlur = 100; /* Borrosidad de la sombra */
-                context.strokeStyle = this.color;
-                context.textAlign = "center";
-                context.textBaseline = "middle";
-                context.font = "20px Arial";
-                context.fillText(this.text, this.posx, this.posy);
-                context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
-                context.fill();
-                context.closePath();
-            }
+    // Dibujar el reflejo
+    context.beginPath();
+    const gradient = context.createRadialGradient(this.posx, this.posy, this.radius / 3, this.posx, this.posy, this.radius);
+    gradient.addColorStop(0, 'rgba(173, 216, 230, 1)'); // Azul claro, totalmente opaco
+    gradient.addColorStop(1, 'rgba(173, 216, 230, 0)'); // Azul claro, totalmente transparente
+    context.fillStyle = gradient;
+    context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
+    context.fill();
+    context.closePath();
+
+    // Dibujar el círculo
+    context.beginPath();
+    context.fillStyle = "#ffffff"; /* Color blanco */
+    context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 0.8)`; /* Sombra con variación de color */
+    context.shadowBlur = 100; /* Borrosidad de la sombra */
+    context.strokeStyle = this.color;
+    context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
+    context.fill();
+    context.closePath();
+
+    // Calcular la posición del reflejo
+    const reflectionRadiusRatio = 0.6; // Factor para ajustar el tamaño del reflejo
+    const reflectionDistanceRatio = 0.7; // Factor para ajustar la distancia del reflejo
+    const reflectionRadius = this.radius * reflectionRadiusRatio;
+    const reflectionDistance = this.radius * reflectionDistanceRatio; // Distancia del reflejo desde el centro del círculo
+
+    const reflectionX = this.posx - reflectionDistance * Math.cos(Math.PI / 4) + reflectionRadius; // Mover hacia la derecha
+    const reflectionY = this.posy + reflectionDistance * Math.sin(Math.PI / 4) - reflectionRadius; // Mover hacia arriba
+
+    // Dibujar el reflejo en forma de luna creciente inclinada
+    context.beginPath();
+    context.save(); // Guardar el estado actual del contexto
+    context.translate(reflectionX, reflectionY); // Mover el punto de origen al centro de la luna creciente
+    context.rotate(-Math.PI / 4); // Rotar 45° a la izquierda
+    context.fillStyle = 'rgba(173, 216, 230, 0.5)'; // Azul claro, semi-transparente
+    context.arc(0, 0, reflectionRadius, Math.PI * 0.25, Math.PI * 1.75, true); // Dibujar el arco circular
+    context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); // Dibujar la línea hacia el punto de inicio del arco
+    context.closePath();
+    context.fill();
+    context.restore(); // Restaurar el estado guardado del contexto
+}
+
+
+
+
+
+
+
+
+
+
+
 
             colisionOcurriendo(CirculoI) {
                 const distanceX = this.posx - CirculoI.posx;
@@ -125,6 +216,20 @@
                         document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
                     }
                 }
+
+                // Si el círculo llega a los bordes laterales, cambiar su dirección para que rebote
+                if (this.posx + this.radius >= canvas.width || this.posx - this.radius <= 0) {
+                    this.dx = -this.dx;
+                    // Ajustar la posición para que el círculo no salga parcialmente de la pantalla
+                    if (this.posx + this.radius >= canvas.width) {
+                        this.posx = canvas.width - this.radius;
+                    } else if (this.posx - this.radius <= 0) {
+                        this.posx = this.radius;
+                    }
+                }
+
+                // Actualizar el offset de la sombra para cambiar el color
+                this.shadowOffset = (this.shadowOffset + 1) % 360;
             }
         }
 
@@ -133,12 +238,14 @@
         let mouseX = 0;
         let mouseY = 0;
 
+        let firstClick = false; // Variable para controlar si ya se ha hecho el primer click
+
         function addCircle() {
-            const randomX = Math.random() * window_width;
+            const randomX = Math.random() * (canvas.width - 2 * 100) + 100; // Ajusta el rango dentro del ancho del canvas
             const randomRadius = Math.floor(Math.random() * 100 + 30);
             const randomSpeed = Math.random() * 5 + 1; // Velocidad aleatoria entre 1 y 5
 
-            const myCircle = new Circle(randomX, window_height + randomRadius, randomRadius, "blue", arrayCircle.length + 1, randomSpeed);
+            const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, "blue", arrayCircle.length + 1, randomSpeed);
             arrayCircle.push(myCircle);
         }
 
@@ -151,7 +258,7 @@
                 addCircle();
             }
 
-            ctx.clearRect(0, 0, window_width, window_height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Iterar sobre los círculos y actualizarlos
             for (let i = 0; i < arrayCircle.length; i++) {
@@ -161,13 +268,24 @@
 
             // Solicitar el siguiente frame de animación
             requestAnimationFrame(updateCircles);
+
+            // Ocultar los letreros si no se ha hecho el primer click aún
+            if (!firstClick) {
+                document.getElementById("instructions").style.display = "block";
+                document.getElementById("subinstructions").style.display = "block";
+            } else {
+                document.getElementById("instructions").style.display = "none";
+                document.getElementById("subinstructions").style.display = "none";
+            }
         }
 
         let lastTime = 0;
 
-        updateCircles(); // Iniciar la animación
-
         canvas.addEventListener('click', function (event) {
+            if (!firstClick) {
+                firstClick = true;
+            }
+
             const rect = canvas.getBoundingClientRect();
             mouseX = event.clientX - rect.left;
             mouseY = event.clientY - rect.top;

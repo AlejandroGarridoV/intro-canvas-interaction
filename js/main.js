@@ -88,6 +88,21 @@ class Circle {
         this.posx = Math.max(this.radius, Math.min(this.posx, window_width - this.radius));
         this.posy = Math.max(this.radius, Math.min(this.posy, window_height - this.radius));
     }
+
+    explode() {
+        // Remover el círculo del canvas
+        const index = arrayCircle.indexOf(this);
+        arrayCircle.splice(index, 1);
+        
+        // Crear varios "fuegos artificiales" (divs) en la posición del círculo
+        for (let i = 0; i < 10; i++) {
+            const firework = document.createElement('div');
+            firework.classList.add('firework', this.color);
+            firework.style.left = `${this.posx}px`;
+            firework.style.top = `${this.posy}px`;
+            document.body.appendChild(firework);
+        }
+    }
 }
 
 let arrayCircle = [];
@@ -99,9 +114,16 @@ for (let i = 0; i < n; i++) {
     let randomY = Math.random() * window_height;
     let randomRadius = Math.floor(Math.random() * 100 + 30);
     let randomSpeed = 1; // Genera un número aleatorio entre 1 y 5 Pero para este ejercicio se quedará en 1
-    let myCircle = new Circle(randomX, randomY, randomRadius, "blue", i + 1, randomSpeed);
+    let randomColor = getRandomColor(); // Obtiene un color aleatorio
+    let myCircle = new Circle(randomX, randomY, randomRadius, randomColor, i + 1, randomSpeed);
     // Agrega el objeto al arreglo
     arrayCircle.push(myCircle);
+}
+
+// Función para obtener un color aleatorio
+function getRandomColor() {
+    const colors = ['#FF4136', '#2ECC40', '#0074D9', '#FFDC00', '#B10DC9'];
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 // Función para actualizar y animar los círculos
@@ -119,11 +141,7 @@ let updateCircles = function (timestamp) {
     requestAnimationFrame(updateCircles);
 }
 
-
-updateCircles(); // Inicia la animación de los círculos
-
-let puntaje = 0; // Inicializa el puntaje en 0
-
+// Listener para el evento de clic en el canvas
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
@@ -137,43 +155,11 @@ canvas.addEventListener('click', function(event) {
         // Si la distancia entre el punto del clic y el centro del círculo es menor que el radio,
         // entonces se hizo clic dentro del círculo
         if (distance <= circle.radius) {
-            // Elimina el círculo del array
-            arrayCircle.splice(i, 1);
-            // Incrementa y muestra el puntaje
-            puntaje++;
-            document.getElementById("puntaje").innerText = `Puntaje: ${parseInt(puntaje)}`; // Asegura que puntaje sea tratado como un número
+            // Hacer explotar el círculo
+            circle.explode();
             break;
         }
     }
 });
 
-
-
-
-// Listener para obtener las coordenadas del ratón
-let mouseX = 0;
-let mouseY = 0;
-
-canvas.addEventListener('mousemove', function(event) {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = event.clientX - rect.left;
-    mouseY = event.clientY - rect.top;
-    
-    // Limpia el canvas antes de dibujar las nuevas coordenadas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dibuja las coordenadas en el canvas
-    drawCoordinates();
-
-    // Muestra las coordenadas en el elemento HTML
-    document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
-});
-
-// Función para dibujar el cuadro de texto de coordenadas en el canvas
-function drawCoordinates() {
-    ctx.fillStyle = 'black';
-    ctx.font = '16px Arial';
-    ctx.fillText('X: ' + mouseX, 20, 20);
-    ctx.fillText('Y: ' + mouseY, 20, 40);
-}
-
+updateCircles(); // Inicia la animación de los círculos
