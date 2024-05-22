@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
@@ -19,61 +19,149 @@
             position: relative;
             width: 100%;
             height: 100%;
+            background-image: url('Images/2.jpg');
+            /* Ruta relativa a la imagen de fondo */
+            background-size: cover;
+            /* Ajustar la imagen para cubrir todo el contenedor */
+            background-position: center;
+            /* Centrar la imagen */
+            background-repeat: no-repeat;
+            /* Evitar que la imagen se repita */
+        }
+
+        /* Estilos para el cursor personalizado */
+        #custom-cursor {
+            position: absolute;
+            width: 20px;
+            /* Ancho de la cruz */
+            height: 20px;
+            /* Alto de la cruz */
+            pointer-events: none;
+            z-index: 4;
+            /* Modificado */
+            font-size: 35px;
+            text-align: center;
+            line-height: 20px;
+        }
+
+        #custom-cursor::before,
+        #custom-cursor::after {
+            content: "";
+            position: absolute;
+        }
+
+        #custom-cursor::before,
+        #custom-cursor::after {
+            width: 3px;
+            /* Grosor de la línea */
+            height: 100%;
+            /* Altura de la línea vertical */
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Color de la línea */
+            /* Modificado */
+            left: 47.5%;
+            top: 0;
+            margin-left: -1px;
+            /* Ajusta para el grosor de la línea */
+        }
+
+        #custom-cursor::before {
+            transform: rotate(0deg);
+        }
+
+        #custom-cursor::after {
+            transform: rotate(90deg);
+        }
+
+        #custom-cursor::before-vertical,
+        #custom-cursor::after-vertical {
+            width: 100%;
+            /* Ancho de la línea horizontal */
+            height: 2px;
+            /* Grosor de la línea */
+            background-color: black;
+            /* Color de la línea */
+            /* Modificado */
+            left: 0;
+            top: 50%;
+            margin-top: -1px;
+            /* Ajusta para el grosor de la línea */
+        }
+
+        #custom-cursor::before-vertical {
+            transform: rotate(0deg);
+        }
+
+        #custom-cursor::after-vertical {
+            transform: rotate(90deg);
+        }
+
+        #custom-cursor::after,
+        #custom-cursor::after-vertical,
+        #custom-cursor::before,
+        #custom-cursor::before-vertical {
+            background-color: black;
+            /* Cambiado a negro */
+        }
+
+        #custom-cursor {
+            color: red;
+            /* Cambiado a rojo */
+        }
+
+
+
+        /* Crusor invisible */
+        body {
+            cursor: none;
         }
 
         #canvas {
-            background-color: #87CEFA;
-            /* Fondo azul claro */
+            background-color: transparent;
             display: block;
             z-index: 1;
         }
 
-        #coordenadas {
+        #coordenadas,
+        #puntaje,
+        #instructions,
+        #subinstructions {
             position: absolute;
+            font-family: Arial;
+            font-size: 20px;
+            color: white;
+            z-index: 3;
+        }
+
+        #coordenadas {
             top: 10px;
             left: 10px;
-            font-family: Arial;
-            font-size: 16px;
-            color: black;
-            z-index: 3;
-            /* Modificado a un valor mayor */
         }
 
         #puntaje {
-            position: absolute;
             top: 40px;
             left: 10px;
-            font-family: Arial;
-            font-size: 16px;
-            color: black;
-            z-index: 3;
-            /* Modificado a un valor mayor */
         }
 
         #instructions {
-            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-family: Arial;
-            font-size: 40px;
-            color: red;
+            font-size: 50px;
+            color: yellow;
             text-align: center;
-            z-index: 2;
-            /* Modificado a un valor mayor */
+            text-shadow: 2px 5px 2px black;
+            
         }
 
         #subinstructions {
-            position: absolute;
             top: calc(50% + 50px);
             left: 50%;
             transform: translate(-50%, -50%);
-            font-family: Arial;
-            font-size: 20px;
-            color: black;
+            font-size: 30px;
             text-align: center;
-            z-index: 2;
-            /* Modificado a un valor mayor */
+            text-shadow: 2px 5px 2px black;
+            
         }
     </style>
 </head>
@@ -85,22 +173,21 @@
         <div id="puntaje">Puntaje: 0</div>
         <div id="instructions">Mantén tu puntaje positivo</div>
         <div id="subinstructions">Haz clic a las burbujas</div>
+        <div id="custom-cursor">•</div>
     </div>
 
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
-        // Función para ajustar el tamaño del canvas al tamaño de la ventana del navegador
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
 
-        // Llamar a la función para ajustar el tamaño del canvas al cargar y al cambiar el tamaño de la ventana
         window.addEventListener('load', () => {
             resizeCanvas();
-            updateCircles(); // Iniciar la animación
+            updateCircles();
         });
         window.addEventListener('resize', resizeCanvas);
 
@@ -119,58 +206,48 @@
             }
 
             draw(context) {
-    // Dibujar el reflejo
-    context.beginPath();
-    const gradient = context.createRadialGradient(this.posx, this.posy, this.radius / 3, this.posx, this.posy, this.radius);
-    gradient.addColorStop(0, 'rgba(173, 216, 230, 1)'); // Azul claro, totalmente opaco
-    gradient.addColorStop(1, 'rgba(173, 216, 230, 0)'); // Azul claro, totalmente transparente
-    context.fillStyle = gradient;
-    context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
-    context.fill();
-    context.closePath();
+                // Dibujar el reflejo
+                context.beginPath();
+                const gradient = context.createRadialGradient(this.posx, this.posy, this.radius / 3, this.posx, this.posy, this.radius);
+                gradient.addColorStop(0, 'rgba(173, 216, 230, 1)'); // Azul claro, totalmente opaco
+                gradient.addColorStop(1, 'rgba(173, 216, 230, 0)'); // Azul claro, totalmente transparente
+                context.fillStyle = gradient;
+                context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
+                context.fill();
+                context.closePath();
 
-    // Dibujar el círculo
-    context.beginPath();
-    context.fillStyle = "#ffffff"; /* Color blanco */
-    context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 0.8)`; /* Sombra con variación de color */
-    context.shadowBlur = 100; /* Borrosidad de la sombra */
-    context.strokeStyle = this.color;
-    context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
-    context.fill();
-    context.closePath();
+                // Dibujar el círculo
+                context.beginPath();
+                context.fillStyle = 'rgba(1, 100, 150, 0.5)'; /* Color blanco */
+                context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 1)`; /* Sombra con variación de color */
+                context.shadowBlur = 100; /* Borrosidad de la sombra */
+                context.strokeStyle = this.color;
+                context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
+                context.fill();
+                context.closePath();
 
-    // Calcular la posición del reflejo
-    const reflectionRadiusRatio = 0.6; // Factor para ajustar el tamaño del reflejo
-    const reflectionDistanceRatio = 0.7; // Factor para ajustar la distancia del reflejo
-    const reflectionRadius = this.radius * reflectionRadiusRatio;
-    const reflectionDistance = this.radius * reflectionDistanceRatio; // Distancia del reflejo desde el centro del círculo
+                // Calcular la posición del reflejo
+                const reflectionRadiusRatio = 0.6; // Factor para ajustar el tamaño del reflejo
+                const reflectionDistanceRatio = 0.7; // Factor para ajustar la distancia del reflejo
+                const reflectionRadius = this.radius * reflectionRadiusRatio;
+                const reflectionDistance = this.radius * reflectionDistanceRatio; // Distancia del reflejo desde el centro del círculo
 
-    const reflectionX = this.posx - reflectionDistance * Math.cos(Math.PI / 4) + reflectionRadius; // Mover hacia la derecha
-    const reflectionY = this.posy + reflectionDistance * Math.sin(Math.PI / 4) - reflectionRadius; // Mover hacia arriba
+                const reflectionX = this.posx - reflectionDistance * Math.cos(Math.PI / 4) + reflectionRadius; // Mover hacia la derecha
+                const reflectionY = this.posy + reflectionDistance * Math.sin(Math.PI / 4) - reflectionRadius; // Mover hacia arriba
 
-    // Dibujar el reflejo en forma de luna creciente inclinada
-    context.beginPath();
-    context.save(); // Guardar el estado actual del contexto
-    context.translate(reflectionX, reflectionY); // Mover el punto de origen al centro de la luna creciente
-    context.rotate(-Math.PI / 4); // Rotar 45° a la izquierda
-    context.fillStyle = 'rgba(173, 216, 230, 0.5)'; // Azul claro, semi-transparente
-    context.arc(0, 0, reflectionRadius, Math.PI * 0.25, Math.PI * 1.75, true); // Dibujar el arco circular
-    context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); // Dibujar la línea hacia el punto de inicio del arco
-    context.closePath();
-    context.fill();
-    context.restore(); // Restaurar el estado guardado del contexto
-}
+                // Dibujar el reflejo en forma de luna creciente inclinada
+                context.beginPath();
+                context.save(); // Guardar el estado actual del contexto
+                context.translate(reflectionX, reflectionY); // Mover el punto de origen al centro de la luna creciente
+                context.rotate(-Math.PI / 4); // Rotar 45° a la izquierda
+                context.fillStyle = 'rgba(173, 216, 230, 0.2)'; // Azul claro, semi-transparente
+                context.arc(0, 0, reflectionRadius, Math.PI * 0.25, Math.PI * 1.75, true); // Dibujar el arco circular
+                context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); // Dibujar la línea hacia el punto de inicio del arco
 
-
-
-
-
-
-
-
-
-
-
+                context.closePath();
+                context.fill();
+                context.restore(); // Restaurar el estado guardado del contexto
+            }
 
             colisionOcurriendo(CirculoI) {
                 const distanceX = this.posx - CirculoI.posx;
@@ -231,6 +308,13 @@
                 // Actualizar el offset de la sombra para cambiar el color
                 this.shadowOffset = (this.shadowOffset + 1) % 360;
             }
+
+            explode() {
+                // Remover el círculo del canvas
+                const index = arrayCircle.indexOf(this);
+                arrayCircle.splice(index, 1);
+
+            }
         }
 
         let arrayCircle = [];
@@ -243,7 +327,7 @@
         function addCircle() {
             const randomX = Math.random() * (canvas.width - 2 * 100) + 100; // Ajusta el rango dentro del ancho del canvas
             const randomRadius = Math.floor(Math.random() * 100 + 30);
-            const randomSpeed = Math.random() * 5 + 1; // Velocidad aleatoria entre 1 y 5
+            const randomSpeed = Math.random() * 3 + 1; // Velocidad aleatoria entre 1 y 5
 
             const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, "blue", arrayCircle.length + 1, randomSpeed);
             arrayCircle.push(myCircle);
@@ -254,7 +338,7 @@
             lastTime = timestamp;
 
             // Agregar nuevos círculos cuando se necesite
-            if (Math.random() < 0.03) { // Probabilidad de agregar un nuevo círculo
+            if (Math.random() < 0.02) { // Probabilidad de agregar un nuevo círculo
                 addCircle();
             }
 
@@ -314,6 +398,26 @@
             // Actualizar las coordenadas fuera del canvas
             document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
         });
+
+        // Obtener referencia al elemento del cursor personalizado
+        const customCursor = document.getElementById("custom-cursor");
+
+        // Función para actualizar la posición del cursor personalizado
+        function updateCursorPosition(x, y) {
+            customCursor.style.left =
+                x + "px";
+            customCursor.style.top = y + "px";
+        }
+
+        // Actualizar la posición del cursor personalizado en el evento mousemove
+        canvas.addEventListener('mousemove', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+            updateCursorPosition(mouseX, mouseY);
+        });
+
+        updateCircles(); // Iniciar la animación de los círculos
     </script>
 </body>
 
