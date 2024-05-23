@@ -15,18 +15,24 @@
             height: 100%;
         }
 
+        #puntajeMaximo {
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            font-family: Arial;
+            font-size: 15px;
+            color: white;
+            z-index: 3;
+        }
+
         #canvas-container {
             position: relative;
             width: 100%;
             height: 100%;
             background-image: url('Images/2.jpg');
-            /* Ruta relativa a la imagen de fondo */
             background-size: cover;
-            /* Ajustar la imagen para cubrir todo el contenedor */
             background-position: center;
-            /* Centrar la imagen */
             background-repeat: no-repeat;
-            /* Evitar que la imagen se repita */
         }
 
         /* Estilos para el cursor personalizado */
@@ -110,8 +116,6 @@
         }
 
 
-
-        /* Crusor invisible */
         body {
             cursor: none;
         }
@@ -134,12 +138,12 @@
         }
 
         #coordenadas {
-            top: 10px;
+            top: 55px;
             left: 10px;
         }
 
         #puntaje {
-            top: 40px;
+            top: 110px;
             left: 10px;
         }
 
@@ -151,7 +155,6 @@
             color: yellow;
             text-align: center;
             text-shadow: 2px 5px 2px black;
-            
         }
 
         #subinstructions {
@@ -161,7 +164,37 @@
             font-size: 30px;
             text-align: center;
             text-shadow: 2px 5px 2px black;
-            
+        }
+
+        footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-family: Arial;
+            font-size: 15px;
+            z-index: 3;
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            background-image: url('Images/4.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: rgba(0, 0, 0, 0.1);
+            color: white;
+            text-shadow: 2px 2px 15px rgba(100, 0, 0, 1);
+            text-align: center;
+            padding: 10px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 25px;
+            z-index: 113;
         }
     </style>
 </head>
@@ -174,6 +207,9 @@
         <div id="instructions">Mantén tu puntaje positivo</div>
         <div id="subinstructions">Haz clic a las burbujas</div>
         <div id="custom-cursor">•</div>
+        <div id="puntajeMaximo" style="position: absolute; top: 80px; left: 10px;">Puntaje Máximo: 0</div>
+        <footer>Creado por Jessel Alejandro Garrido Virgen (Créditos de la imagen a quién correspondan)</footer>
+        <header>Burbujas infinitas</header>
     </div>
 
     <script>
@@ -192,233 +228,222 @@
         window.addEventListener('resize', resizeCanvas);
 
         class Circle {
-            constructor(x, y, radius, color, text, speed) {
+            constructor(x, y, radius, color, text, speed, points, isGolden = false) {
                 this.posx = x;
                 this.posy = y;
                 this.radius = radius;
                 this.color = color;
                 this.text = text;
                 this.speed = speed;
-                this.dx = 0; // Los círculos no tienen velocidad horizontal
-                this.dy = -this.speed; // La velocidad vertical es negativa para que se muevan hacia arriba
+                this.dx = 0;
+                this.dy = -this.speed;
                 this.colliding = false;
                 this.shadowOffset = 0;
+                this.isGolden = isGolden;
+                this.points = points;
             }
 
             draw(context) {
-                // Dibujar el reflejo
                 context.beginPath();
                 const gradient = context.createRadialGradient(this.posx, this.posy, this.radius / 3, this.posx, this.posy, this.radius);
-                gradient.addColorStop(0, 'rgba(173, 216, 230, 1)'); // Azul claro, totalmente opaco
-                gradient.addColorStop(1, 'rgba(173, 216, 230, 0)'); // Azul claro, totalmente transparente
+                gradient.addColorStop(0, 'rgba(173, 216, 230, 1)');
+                gradient.addColorStop(1, 'rgba(173, 216, 230, 0)');
                 context.fillStyle = gradient;
                 context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
                 context.fill();
                 context.closePath();
 
-                // Dibujar el círculo
                 context.beginPath();
-                context.fillStyle = 'rgba(1, 100, 150, 0.5)'; /* Color blanco */
-                context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 1)`; /* Sombra con variación de color */
-                context.shadowBlur = 100; /* Borrosidad de la sombra */
+                context.fillStyle = this.isGolden ? this.color : 'rgba(15, 80, 220, 0.5)';
+                context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 1)`;
+                context.shadowBlur = 100;
                 context.strokeStyle = this.color;
                 context.arc(this.posx, this.posy, this.radius, 0, Math.PI * 2, false);
                 context.fill();
                 context.closePath();
 
-                // Calcular la posición del reflejo
-                const reflectionRadiusRatio = 0.6; // Factor para ajustar el tamaño del reflejo
-                const reflectionDistanceRatio = 0.7; // Factor para ajustar la distancia del reflejo
+                const reflectionRadiusRatio = 0.6;
+                const reflectionDistanceRatio = 0.7;
                 const reflectionRadius = this.radius * reflectionRadiusRatio;
-                const reflectionDistance = this.radius * reflectionDistanceRatio; // Distancia del reflejo desde el centro del círculo
+                const reflectionDistance = this.radius * reflectionDistanceRatio;
 
-                const reflectionX = this.posx - reflectionDistance * Math.cos(Math.PI / 4) + reflectionRadius; // Mover hacia la derecha
-                const reflectionY = this.posy + reflectionDistance * Math.sin(Math.PI / 4) - reflectionRadius; // Mover hacia arriba
+                const reflectionX = this.posx - reflectionDistance * Math.cos(Math.PI / 4) + reflectionRadius;
+                const reflectionY = this.posy + reflectionDistance * Math.sin(Math.PI / 4) - reflectionRadius;
 
-                // Dibujar el reflejo en forma de luna creciente inclinada
                 context.beginPath();
-                context.save(); // Guardar el estado actual del contexto
-                context.translate(reflectionX, reflectionY); // Mover el punto de origen al centro de la luna creciente
-                context.rotate(-Math.PI / 4); // Rotar 45° a la izquierda
-                context.fillStyle = 'rgba(173, 216, 230, 0.2)'; // Azul claro, semi-transparente
-                context.arc(0, 0, reflectionRadius, Math.PI * 0.25, Math.PI * 1.75, true); // Dibujar el arco circular
-                context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); // Dibujar la línea hacia el punto de inicio del arco
-
-                context.closePath();
-                context.fill();
-                context.restore(); // Restaurar el estado guardado del contexto
-            }
-
-            colisionOcurriendo(CirculoI) {
-                const distanceX = this.posx - CirculoI.posx;
-                const distanceY = this.posy - CirculoI.posy;
-                const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
-                return distance < this.radius + CirculoI.radius;
-            }
-
-            update(circles) {
-                let collided = false;
-
-                // Comprobar colisión con otros círculos
-                for (let i = 0; i < circles.length; i++) {
-                    if (circles[i] !== this) {
-                        if (this.colisionOcurriendo(circles[i])) {
-                            collided = true;
-                            // Calcular el ángulo para el rebote
-                            const angle = Math.atan2(this.posy - circles[i].posy, this.posx - circles[i].posx);
-                            // Calcular un ángulo aleatorio para el rebote
-                            const randomAngle = angle + (Math.random() - 0.5) * Math.PI / 2;
-                            this.dx = Math.cos(randomAngle) * this.speed;
-                            this.dy = Math.sin(randomAngle) * this.speed;
-                            this.colliding = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!collided) {
-                    this.colliding = false;
-                }
-
-                // Actualizar posición del círculo
-                this.posx += this.dx;
-                this.posy += this.dy;
-
-                // Si el círculo sale del borde superior, eliminarlo y disminuir el puntaje
-                if (this.posy + this.radius < 0) {
-                    const index = circles.indexOf(this);
-                    if (index !== -1) {
-                        circles.splice(index, 1);
-                        puntaje--;
-                        document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
-                    }
-                }
-
-                // Si el círculo llega a los bordes laterales, cambiar su dirección para que rebote
-                if (this.posx + this.radius >= canvas.width || this.posx - this.radius <= 0) {
-                    this.dx = -this.dx;
-                    // Ajustar la posición para que el círculo no salga parcialmente de la pantalla
-                    if (this.posx + this.radius >= canvas.width) {
-                        this.posx = canvas.width - this.radius;
-                    } else if (this.posx - this.radius <= 0) {
-                        this.posx = this.radius;
-                    }
-                }
-
-                // Actualizar el offset de la sombra para cambiar el color
-                this.shadowOffset = (this.shadowOffset + 1) % 360;
-            }
-
-            explode() {
-                // Remover el círculo del canvas
-                const index = arrayCircle.indexOf(this);
-                arrayCircle.splice(index, 1);
-
-            }
+                context.save();
+                context.translate(reflectionX, reflectionY);
+                context.rotate(-Math.PI / 4);
+                context.fillStyle = 'rgba(173, 216, 230, 0.2)';
+                context.arc(0, 0, reflectionRadius, Math.PI *0.25, Math.PI * 1.75, true);
+context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); 
+context.closePath();
+            context.fill();
+            context.restore();
         }
 
-        let arrayCircle = [];
-        let puntaje = 0; // Mover puntaje aquí para que sea global
-        let mouseX = 0;
-        let mouseY = 0;
-
-        let firstClick = false; // Variable para controlar si ya se ha hecho el primer click
-
-        function addCircle() {
-            const randomX = Math.random() * (canvas.width - 2 * 100) + 100; // Ajusta el rango dentro del ancho del canvas
-            const randomRadius = Math.floor(Math.random() * 100 + 30);
-            const randomSpeed = Math.random() * 3 + 1; // Velocidad aleatoria entre 1 y 5
-
-            const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, "blue", arrayCircle.length + 1, randomSpeed);
-            arrayCircle.push(myCircle);
+        colisionOcurriendo(CirculoI) {
+            const distanceX = this.posx - CirculoI.posx;
+            const distanceY = this.posy - CirculoI.posy;
+            const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+            return distance < this.radius + CirculoI.radius;
         }
 
-        function updateCircles(timestamp) {
-            const deltaTime = timestamp - lastTime;
-            lastTime = timestamp;
+        update(circles) {
+            let collided = false;
 
-            // Agregar nuevos círculos cuando se necesite
-            if (Math.random() < 0.02) { // Probabilidad de agregar un nuevo círculo
-                addCircle();
+            for (let i = 0; i < circles.length; i++) {
+                if (circles[i] !== this) {
+                    if (this.colisionOcurriendo(circles[i])) {
+                        collided = true;
+                        const angle = Math.atan2(this.posy - circles[i].posy, this.posx - circles[i].posx);
+                        const randomAngle = angle + (Math.random() - 0.5) * Math.PI / 2;
+                        this.dx = Math.cos(randomAngle) * this.speed;
+                        this.dy = Math.sin(randomAngle) * this.speed;
+                        this.colliding = true;
+                        break;
+                    }
+                }
             }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Iterar sobre los círculos y actualizarlos
-            for (let i = 0; i < arrayCircle.length; i++) {
-                arrayCircle[i].update(arrayCircle);
-                arrayCircle[i].draw(ctx);
+            if (!collided) {
+                this.colliding = false;
             }
 
-            // Solicitar el siguiente frame de animación
-            requestAnimationFrame(updateCircles);
+            this.posx += this.dx;
+            this.posy += this.dy;
 
-            // Ocultar los letreros si no se ha hecho el primer click aún
-            if (!firstClick) {
-                document.getElementById("instructions").style.display = "block";
-                document.getElementById("subinstructions").style.display = "block";
-            } else {
-                document.getElementById("instructions").style.display = "none";
-                document.getElementById("subinstructions").style.display = "none";
-            }
-        }
-
-        let lastTime = 0;
-
-        canvas.addEventListener('click', function (event) {
-            if (!firstClick) {
-                firstClick = true;
-            }
-
-            const rect = canvas.getBoundingClientRect();
-            mouseX = event.clientX - rect.left;
-            mouseY = event.clientY - rect.top;
-
-            // Iterar sobre los círculos para comprobar si se hizo clic en alguno
-            for (let i = 0; i < arrayCircle.length; i++) {
-                const circle = arrayCircle[i];
-                const distance = Math.sqrt((mouseX - circle.posx) ** 2 + (mouseY - circle.posy) ** 2);
-
-                // Si la distancia entre el punto del clic y el centro del círculo es menor que el radio, entonces se hizo clic dentro del círculo
-                if (distance <= circle.radius) {
-                    // Eliminar el círculo del array
-                    arrayCircle.splice(i, 1);
-                    // Incrementar y mostrar el puntaje
-                    puntaje++;
+            if (this.posy + this.radius < 0) {
+                const index = circles.indexOf(this);
+                if (index !== -1) {
+                    circles.splice(index, 1);
+                    puntaje -= this.points; // Disminuir el puntaje dependiendo de los puntos de la burbuja
                     document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
-                    break;
                 }
             }
-        });
 
-        canvas.addEventListener('mousemove', function (event) {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = event.clientX - rect.left;
-            mouseY = event.clientY - rect.top;
-            // Actualizar las coordenadas fuera del canvas
-            document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
-        });
+            if (this.posx + this.radius >= canvas.width || this.posx - this.radius <= 0) {
+                this.dx = -this.dx;
+                if (this.posx + this.radius >= canvas.width) {
+                    this.posx = canvas.width - this.radius;
+                } else if (this.posx - this.radius <= 0) {
+                    this.posx = this.radius;
+                }
+            }
 
-        // Obtener referencia al elemento del cursor personalizado
-        const customCursor = document.getElementById("custom-cursor");
-
-        // Función para actualizar la posición del cursor personalizado
-        function updateCursorPosition(x, y) {
-            customCursor.style.left =
-                x + "px";
-            customCursor.style.top = y + "px";
+            this.shadowOffset = (this.shadowOffset + 1) % 360;
         }
 
-        // Actualizar la posición del cursor personalizado en el evento mousemove
-        canvas.addEventListener('mousemove', function (event) {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = event.clientX - rect.left;
-            mouseY = event.clientY - rect.top;
-            updateCursorPosition(mouseX, mouseY);
-        });
+        explode() {
+            const index = arrayCircle.indexOf(this);
+            arrayCircle.splice(index, 1);
+        }
+    }
 
-        updateCircles(); // Iniciar la animación de los círculos
-    </script>
+    let arrayCircle = [];
+    let puntaje = 0;
+    let puntajeMaximo = localStorage.getItem("puntajeMaximo") || 0;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    let firstClick = false;
+
+    function addCircle() {
+        const randomX = Math.random() * (canvas.width - 2 * 100) + 100;
+        const randomRadius = Math.floor(Math.random() * 100 + 30);
+        const randomSpeed = Math.random() * 3 + 1;
+        const isGolden = Math.random() < 0.05; // Ajustado para una probabilidad del 10% de burbujas doradas
+        const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
+
+        let points = 1;
+        if (isGolden) {
+            points = 50; // Puntos por una burbuja dorada
+        }
+
+        const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
+        arrayCircle.push(myCircle);
+    }
+
+    function updateCircles(timestamp) {
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
+
+        if (Math.random() < 0.02) {
+            addCircle();
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < arrayCircle.length; i++) {
+            arrayCircle[i].update(arrayCircle);
+            arrayCircle[i].draw(ctx);
+        }
+
+        requestAnimationFrame(updateCircles);
+
+        if (puntaje > puntajeMaximo) {
+            puntajeMaximo = puntaje;
+            localStorage.setItem("puntajeMaximo", puntajeMaximo);
+        }
+
+        document.getElementById("puntajeMaximo").innerText = `Puntaje Máximo: ${puntajeMaximo}`;
+
+        if (!firstClick) {
+            document.getElementById("instructions").style.display = "block";
+            document.getElementById("subinstructions").style.display = "block";
+        } else {
+            document.getElementById("instructions").style.display = "none";
+            document.getElementById("subinstructions").style.display = "none";
+        }
+    }
+
+    let lastTime = 0;
+
+    canvas.addEventListener('click', function (event) {
+        if (!firstClick) {
+            firstClick = true;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        mouseX = event.clientX - rect.left;
+        mouseY = event.clientY - rect.top;
+
+        for (let i = 0; i < arrayCircle.length; i++) {
+            const circle = arrayCircle[i];
+            const distance = Math.sqrt((mouseX - circle.posx) ** 2 + (mouseY - circle.posy) ** 2);
+
+            if (distance <= circle.radius) {
+                arrayCircle.splice(i, 1);
+                puntaje += circle.points; // Aumentar el puntaje dependiendo de los puntos de la burbuja
+                document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
+                break;
+            }
+        }
+    });
+
+    canvas.addEventListener('mousemove', function (event) {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = event.clientX - rect.left;
+        mouseY = event.clientY - rect.top;
+        document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
+    });
+
+    const customCursor = document.getElementById("custom-cursor");
+
+    function updateCursorPosition(x, y) {
+        customCursor.style.left = x + "px";
+        customCursor.style.top = y + "px";
+    }
+
+    canvas.addEventListener('mousemove', function (event) {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = event.clientX - rect.left;
+        mouseY = event.clientY - rect.top;
+        updateCursorPosition(mouseX, mouseY);
+    });
+
+    updateCircles();
+</script>
 </body>
-
 </html>
+```
