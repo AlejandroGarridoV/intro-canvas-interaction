@@ -196,6 +196,29 @@
             font-size: 25px;
             z-index: 113;
         }
+
+        #nivel {
+            position: absolute;
+            top: 110px;
+            right: 20px;
+            font-family: Arial;
+            font-size: 15px;
+            color: white;
+            z-index: 3;
+        }
+
+        .timer {
+            font-size: 24px;
+            text-align: center;
+            margin-top: 50vh;
+            transform: translateY(-50%);
+            position: absolute;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -208,6 +231,13 @@
         <div id="subinstructions">Haz clic a las burbujas</div>
         <div id="custom-cursor">•</div>
         <div id="puntajeMaximo" style="position: absolute; top: 80px; left: 10px;">Puntaje Máximo: 0</div>
+        <div id="nivel"
+            style="position: absolute; top: 80px; right: 40px; font-family: 'Times New Roman', Times, serif; font-size: 25px; color: white; z-index: 3;">
+            Nivel 1</div>
+        <div id="timer"
+            style="position: absolute; top: 140px; right: 20px; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 15px; color: white; z-index: 3;">
+            Tiempo restante: 1:00</div>
+
         <footer>Creado por Jessel Alejandro Garrido Virgen (Créditos de la imagen a quién correspondan)</footer>
         <header>Burbujas infinitas</header>
     </div>
@@ -275,175 +305,233 @@
                 context.translate(reflectionX, reflectionY);
                 context.rotate(-Math.PI / 4);
                 context.fillStyle = 'rgba(173, 216, 230, 0.2)';
-                context.arc(0, 0, reflectionRadius, Math.PI *0.25, Math.PI * 1.75, true);
-context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25)); 
-context.closePath();
-            context.fill();
-            context.restore();
-        }
+                context.arc(0, 0, reflectionRadius, Math.PI * 0.25, Math.PI * 1.75, true);
+                context.lineTo(reflectionRadius * Math.cos(Math.PI * 0.25), reflectionRadius * Math.sin(Math.PI * 0.25));
+                context.closePath();
+                context.fill();
+                context.restore();
+            }
 
-        colisionOcurriendo(CirculoI) {
-            const distanceX = this.posx - CirculoI.posx;
-            const distanceY = this.posy - CirculoI.posy;
-            const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
-            return distance < this.radius + CirculoI.radius;
-        }
+            colisionOcurriendo(CirculoI) {
+                const distanceX = this.posx - CirculoI.posx;
+                const distanceY = this.posy - CirculoI.posy;
+                const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+                return distance < this.radius + CirculoI.radius;
+            }
 
-        update(circles) {
-            let collided = false;
+            update(circles) {
+                let collided = false;
 
-            for (let i = 0; i < circles.length; i++) {
-                if (circles[i] !== this) {
-                    if (this.colisionOcurriendo(circles[i])) {
-                        collided = true;
-                        const angle = Math.atan2(this.posy - circles[i].posy, this.posx - circles[i].posx);
-                        const randomAngle = angle + (Math.random() - 0.5) * Math.PI / 2;
-                        this.dx = Math.cos(randomAngle) * this.speed;
-                        this.dy = Math.sin(randomAngle) * this.speed;
-                        this.colliding = true;
-                        break;
+                for (let i = 0; i < circles.length; i++) {
+                    if (circles[i] !== this) {
+                        if (this.colisionOcurriendo(circles[i])) {
+                            collided = true;
+                            const angle = Math.atan2(this.posy - circles[i].posy, this.posx - circles[i].posx);
+                            const randomAngle = angle + (Math.random() - 0.5) * Math.PI / 2;
+                            this.dx = Math.cos(randomAngle) * this.speed;
+                            this.dy = Math.sin(randomAngle) * this.speed;
+                            this.colliding = true;
+                            break;
+                        }
                     }
                 }
+
+                if (!collided) {
+                    this.colliding = false;
+                }
+
+                this.posx += this.dx;
+                this.posy += this.dy;
+
+                if (this.posy + this.radius < 0) {
+                    const index = circles.indexOf(this);
+                    if (index !== -1) {
+                        circles.splice(index, 1);
+                        puntaje -= this.points; // Disminuir el puntaje dependiendo de los puntos de la burbuja
+                        document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
+                    }
+                }
+
+                if (this.posx + this.radius >= canvas.width || this.posx - this.radius <= 0) {
+                    this.dx = -this.dx;
+                    if (this.posx + this.radius >= canvas.width) {
+                        this.posx = canvas.width - this.radius;
+                    } else if (this.posx - this.radius <= 0) {
+                        this.posx = this.radius;
+                    }
+                }
+
+                this.shadowOffset = (this.shadowOffset + 1) % 360;
             }
 
-            if (!collided) {
-                this.colliding = false;
+            explode() {
+                const index = arrayCircle.indexOf(this);
+                arrayCircle.splice(index, 1);
+            }
+        }
+
+        let arrayCircle = [];
+        let puntaje = 0;
+        let puntajeMaximo = localStorage.getItem("puntajeMaximo") || 0;
+        let mouseX = 0;
+        let mouseY = 0;
+
+        let firstClick = false;
+        let allowGoldenBubbles = true;
+
+        // Después de 60 segundos, cambia la variable para que las burbujas doradas ya no se generen
+        setTimeout(() => {
+            allowGoldenBubbles = false;
+        }, 60000);
+
+        function addCircle() {
+            const randomX = Math.random() * (canvas.width - 2 * 100) + 100;
+            const randomRadius = Math.floor(Math.random() * 100 + 30);
+            const randomSpeed = Math.random() * 3 + 1;
+
+            // Ajusta la probabilidad de burbujas doradas basado en allowGoldenBubbles
+            const isGolden = allowGoldenBubbles && Math.random() < 0.05;
+            const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
+
+            let points = 1;
+            if (isGolden) {
+                points = 50; // Puntos por una burbuja dorada
             }
 
-            this.posx += this.dx;
-            this.posy += this.dy;
+            const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
+            arrayCircle.push(myCircle);
+        }
 
-            if (this.posy + this.radius < 0) {
-                const index = circles.indexOf(this);
-                if (index !== -1) {
-                    circles.splice(index, 1);
-                    puntaje -= this.points; // Disminuir el puntaje dependiendo de los puntos de la burbuja
+        function updateCircles(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (Math.random() < 0.02) {
+                addCircle();
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < arrayCircle.length; i++) {
+                arrayCircle[i].update(arrayCircle);
+                arrayCircle[i].draw(ctx);
+            }
+
+            requestAnimationFrame(updateCircles);
+
+            if (puntaje > puntajeMaximo) {
+                puntajeMaximo = puntaje;
+                localStorage.setItem("puntajeMaximo", puntajeMaximo);
+            }
+
+            document.getElementById("puntajeMaximo").innerText = `Puntaje Máximo: ${puntajeMaximo}`;
+
+            if (!firstClick) {
+                document.getElementById("instructions").style.display = "block";
+                document.getElementById("subinstructions").style.display = "block";
+            } else {
+                document.getElementById("instructions").style.display = "none";
+                document.getElementById("subinstructions").style.display = "none";
+            }
+        }
+
+        let lastTime = 0;
+
+        canvas.addEventListener('click', function (event) {
+            if (!firstClick) {
+                firstClick = true;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+
+            for (let i = 0; i < arrayCircle.length; i++) {
+                const circle = arrayCircle[i];
+                const distance = Math.sqrt((mouseX - circle.posx) ** 2 + (mouseY - circle.posy) ** 2);
+
+                if (distance <= circle.radius) {
+                    arrayCircle.splice(i, 1);
+                    puntaje += circle.points; // Aumentar el puntaje dependiendo de los puntos de la burbuja
                     document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
+                    break;
                 }
             }
+        });
 
-            if (this.posx + this.radius >= canvas.width || this.posx - this.radius <= 0) {
-                this.dx = -this.dx;
-                if (this.posx + this.radius >= canvas.width) {
-                    this.posx = canvas.width - this.radius;
-                } else if (this.posx - this.radius <= 0) {
-                    this.posx = this.radius;
-                }
+        canvas.addEventListener('mousemove', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+            document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
+        });
+
+        const customCursor = document.getElementById("custom-cursor");
+
+        function updateCursorPosition(x, y) {
+            customCursor.style.left = x + "px";
+            customCursor.style.top = y + "px";
+        }
+
+        canvas.addEventListener('mousemove', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+            updateCursorPosition(mouseX, mouseY);
+        });
+        let tiempoRestante = 60; // Tiempo en segundos
+
+        function actualizarTemporizador() {
+            const minutos = Math.floor(tiempoRestante / 60);
+            let segundos = tiempoRestante % 60;
+
+            // Agregar un cero inicial si los segundos son menores que 10
+            segundos = segundos < 10 ? "0" + segundos : segundos;
+
+            // Actualizar el texto del temporizador
+            document.getElementById("timer").innerText = `Tiempo restante: ${minutos}:${segundos}`;
+
+            // Reducir el tiempo restante en 1 segundo
+            tiempoRestante--;
+
+            // Verificar si el tiempo ha llegado a cero
+            // Verificar si el tiempo ha llegado a cero
+            if (tiempoRestante < 0) {
+                clearInterval(intervaloTemporizador);
+                const mensaje = document.getElementById("timer");
+                mensaje.innerText = "¡YA NO HAY BURBUJAS DORADAS!";
+                mensaje.style.position = "absolute";
+                mensaje.style.top = "50%";
+                mensaje.style.left = "50%";
+                mensaje.style.transform = "translate(-45%, -50%)";
+                mensaje.style.fontSize = "40px"; // Tamaño del texto
+                mensaje.style.color = "yellow"; // Color del texto
+                mensaje.style.textShadow = "2px 2px 5px black"; // Sombra del texto
+                mensaje.classList.remove("hidden");
+                setTimeout(function () {
+                    mensaje.classList.add("hidden");
+                }, 3000);
             }
 
-            this.shadowOffset = (this.shadowOffset + 1) % 360;
         }
 
-        explode() {
-            const index = arrayCircle.indexOf(this);
-            arrayCircle.splice(index, 1);
-        }
-    }
 
-    let arrayCircle = [];
-    let puntaje = 0;
-    let puntajeMaximo = localStorage.getItem("puntajeMaximo") || 0;
-    let mouseX = 0;
-    let mouseY = 0;
+        // Llamar a la función actualizarTemporizador cada segundo
+        const intervaloTemporizador = setInterval(actualizarTemporizador, 1000);
 
-    let firstClick = false;
+        let nivelActual = 1; // Variable para rastrear el nivel actual
 
-    function addCircle() {
-        const randomX = Math.random() * (canvas.width - 2 * 100) + 100;
-        const randomRadius = Math.floor(Math.random() * 100 + 30);
-        const randomSpeed = Math.random() * 3 + 1;
-        const isGolden = Math.random() < 0.05; // Ajustado para una probabilidad del 10% de burbujas doradas
-        const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
-
-        let points = 1;
-        if (isGolden) {
-            points = 50; // Puntos por una burbuja dorada
+        function cambiarNivel() {
+            nivelActual++; // Incrementar el nivel actual
+            document.getElementById("nivel").innerText = `Nivel ${nivelActual}`; // Actualizar el texto del nivel
         }
 
-        const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
-        arrayCircle.push(myCircle);
-    }
+        // Llama a la función cambiarNivel después de 60 segundos
+        setTimeout(cambiarNivel, 60000); // 60000 milisegundos = 60 segundos
 
-    function updateCircles(timestamp) {
-        const deltaTime = timestamp - lastTime;
-        lastTime = timestamp;
 
-        if (Math.random() < 0.02) {
-            addCircle();
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        for (let i = 0; i < arrayCircle.length; i++) {
-            arrayCircle[i].update(arrayCircle);
-            arrayCircle[i].draw(ctx);
-        }
-
-        requestAnimationFrame(updateCircles);
-
-        if (puntaje > puntajeMaximo) {
-            puntajeMaximo = puntaje;
-            localStorage.setItem("puntajeMaximo", puntajeMaximo);
-        }
-
-        document.getElementById("puntajeMaximo").innerText = `Puntaje Máximo: ${puntajeMaximo}`;
-
-        if (!firstClick) {
-            document.getElementById("instructions").style.display = "block";
-            document.getElementById("subinstructions").style.display = "block";
-        } else {
-            document.getElementById("instructions").style.display = "none";
-            document.getElementById("subinstructions").style.display = "none";
-        }
-    }
-
-    let lastTime = 0;
-
-    canvas.addEventListener('click', function (event) {
-        if (!firstClick) {
-            firstClick = true;
-        }
-
-        const rect = canvas.getBoundingClientRect();
-        mouseX = event.clientX - rect.left;
-        mouseY = event.clientY - rect.top;
-
-        for (let i = 0; i < arrayCircle.length; i++) {
-            const circle = arrayCircle[i];
-            const distance = Math.sqrt((mouseX - circle.posx) ** 2 + (mouseY - circle.posy) ** 2);
-
-            if (distance <= circle.radius) {
-                arrayCircle.splice(i, 1);
-                puntaje += circle.points; // Aumentar el puntaje dependiendo de los puntos de la burbuja
-                document.getElementById("puntaje").innerText = `Puntaje: ${puntaje}`;
-                break;
-            }
-        }
-    });
-
-    canvas.addEventListener('mousemove', function (event) {
-        const rect = canvas.getBoundingClientRect();
-        mouseX = event.clientX - rect.left;
-        mouseY = event.clientY - rect.top;
-        document.getElementById("coordenadas").innerText = `X: ${mouseX}, Y: ${mouseY}`;
-    });
-
-    const customCursor = document.getElementById("custom-cursor");
-
-    function updateCursorPosition(x, y) {
-        customCursor.style.left = x + "px";
-        customCursor.style.top = y + "px";
-    }
-
-    canvas.addEventListener('mousemove', function (event) {
-        const rect = canvas.getBoundingClientRect();
-        mouseX = event.clientX - rect.left;
-        mouseY = event.clientY - rect.top;
-        updateCursorPosition(mouseX, mouseY);
-    });
-
-    updateCircles();
-</script>
+        updateCircles();
+    </script>
 </body>
+
 </html>
-```
