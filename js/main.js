@@ -162,4 +162,15 @@ canvas.addEventListener('click', function(event) {
     }
 });
 
+function pauseMusic() {
+    const audio = document.getElementById("gameMusic");
+    audio.pause();
+}
+
+// Y reanudarla con esta función
+function playMusic() {
+    const audio = document.getElementById("gameMusic");
+    audio.play();
+}
+
 updateCircles(); // Inicia la animación de los círculos
