@@ -237,14 +237,20 @@
         <div id="timer"
             style="position: absolute; top: 140px; right: 20px; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 15px; color: white; z-index: 3;">
             Tiempo restante: 1:00</div>
-        <audio id="gameMusic" autoplay loop>
+        <button id="playButton">Reproducir música</button>
+        <audio id="gameMusic" loop>
             <source src="Audio/Cancion.mp3" type="audio/mpeg">
+
         </audio>
-        <footer>Creado por Jessel Alejandro Garrido Virgen (Créditos de la imagen a quién correspondan)</footer>
+
+        <footer>Creado por Jessel Alejandro Garrido Virgen (Créditos de la imagen y la música a quién correspondan)
+        </footer>
         <header>Burbujas infinitas</header>
     </div>
 
     <script>
+
+
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
@@ -386,18 +392,22 @@
             allowGoldenBubbles = false;
         }, 60000);
 
+
         function addCircle() {
             const randomX = Math.random() * (canvas.width - 2 * 100) + 100;
             const randomRadius = Math.floor(Math.random() * 100 + 30);
             const randomSpeed = Math.random() * 3 + 1;
 
             // Ajusta la probabilidad de burbujas doradas basado en allowGoldenBubbles
-            const isGolden = allowGoldenBubbles && Math.random() < 0.05;
+            const isGolden = allowGoldenBubbles && Math.random() < 0.01;
             const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
 
             let points = 1;
             if (isGolden) {
                 points = 50; // Puntos por una burbuja dorada
+                setTimeout(() => {
+                    allowGoldenBubbles = 1;
+                }, 110000);
             }
 
             const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
@@ -443,6 +453,7 @@
             if (!firstClick) {
                 firstClick = true;
             }
+            document.getElementById("gameMusic").play();
 
             const rect = canvas.getBoundingClientRect();
             mouseX = event.clientX - rect.left;
@@ -484,84 +495,80 @@
 
         let tiempoRestante = 60; // Tiempo en segundos
 
-function actualizarTemporizador() {
-    const minutos = Math.floor(tiempoRestante / 60);
-    let segundos = tiempoRestante % 60;
+        function actualizarTemporizador() {
+            const minutos = Math.floor(tiempoRestante / 60);
+            let segundos = tiempoRestante % 60;
 
-    // Agregar un cero inicial si los segundos son menores que 10
-    segundos = segundos < 10 ? "0" + segundos : segundos;
+            // Agregar un cero inicial si los segundos son menores que 10
+            segundos = segundos < 10 ? "0" + segundos : segundos;
 
-    // Actualizar el texto del temporizador
-    document.getElementById("timer").innerText = `Tiempo restante: ${minutos}:${segundos}`;
+            // Actualizar el texto del temporizador
+            document.getElementById("timer").innerText = `Tiempo restante: ${minutos}:${segundos}`;
 
-    // Reducir el tiempo restante en 1 segundo
-    tiempoRestante--;
+            // Reducir el tiempo restante en 1 segundo
+            tiempoRestante--;
 
-    // Verificar si el tiempo ha llegado a cero
-    if (tiempoRestante === 0) {
-        clearInterval(intervaloTemporizador);
-        const mensaje = document.getElementById("timer");
-        mensaje.innerText = "¡YA NO HAY BURBUJAS DORADAS!";
-        mensaje.style.position = "absolute";
-        mensaje.style.top = "50%";
-        mensaje.style.left = "50%";
-        mensaje.style.transform = "translate(-45%, -50%)";
-        mensaje.style.fontSize = "40px"; // Tamaño del texto
-        mensaje.style.color = "yellow"; // Color del texto
-        mensaje.style.textShadow = "2px 2px 5px black"; // Sombra del texto
-        mensaje.classList.remove("hidden");
-        setTimeout(function () {
-            mensaje.classList.add("hidden");
-        }, 3000);
-    }
+            // Verificar si el tiempo ha llegado a cero
+            if (tiempoRestante === 0) {
+                clearInterval(intervaloTemporizador);
+                const mensaje = document.getElementById("timer");
+                mensaje.innerText = "¡YA NO HAY BURBUJAS DORADAS!";
+                mensaje.style.position = "absolute";
+                mensaje.style.top = "50%";
+                mensaje.style.left = "50%";
+                mensaje.style.transform = "translate(-45%, -50%)";
+                mensaje.style.fontSize = "40px"; // Tamaño del texto
+                mensaje.style.color = "yellow"; // Color del texto
+                mensaje.style.textShadow = "2px 2px 5px black"; // Sombra del texto
+                mensaje.classList.remove("hidden");
+                setTimeout(function () {
+                    mensaje.classList.add("hidden");
+                }, 3000);
+            }
 
-    // Cambiar a Nivel 2 después de 60 segundos
-    if (tiempoRestante === 0) {
-        const nivel = document.getElementById("nivel");
-        nivel.innerText = "Nivel 2";
-    }
-}
+            // Cambiar a Nivel 2 después de 60 segundos
+            if (tiempoRestante === 0) {
+                const nivel = document.getElementById("nivel");
+                nivel.innerText = "Nivel 2";
+            }
+        }
 
-// Llamar a la función actualizarTemporizador cada segundo
-const intervaloTemporizador = setInterval(actualizarTemporizador, 1000);
+        // Llamar a la función actualizarTemporizador cada segundo
+        const intervaloTemporizador = setInterval(actualizarTemporizador, 1000);
 
-let tiempoqueresta = 88; // Cambiar a 88 segundos para que aparezca a los 1 minuto y 28 segundos
+        let tiempoqueresta = 88; // Cambiar a 88 segundos para que aparezca a los 1 minuto y 28 segundos
 
-function actualizarTemporizador2() {
-    const minutos = Math.floor(tiempoqueresta / 60);
-    let segundos = tiempoqueresta % 60;
+        function actualizarTemporizador2() {
+            const minutos = Math.floor(tiempoqueresta / 60);
+            let segundos = tiempoqueresta % 60;
 
-    // Agregar un cero inicial si los segundos son menores que 10
-    segundos = segundos < 10 ? "0" + segundos : segundos;
+            // Agregar un cero inicial si los segundos son menores que 10
+            segundos = segundos < 10 ? "0" + segundos : segundos;
 
-    // Crear un nuevo elemento para el segundo letrero
-    const preparateMensaje = document.createElement("div");
-    preparateMensaje.innerText = "PREPARATE";
-    preparateMensaje.style.position = "absolute";
-    preparateMensaje.style.top = "50%";
-    preparateMensaje.style.left = "50%";
-    preparateMensaje.style.transform = "translate(-50%, -50%)";
-    preparateMensaje.style.fontSize = "50px"; // Tamaño del texto
-    preparateMensaje.style.color = "red"; // Color del texto
-    preparateMensaje.style.textShadow = "2px 2px 5px black"; // Sombra del texto
-    preparateMensaje.id = "preparate"; // Establecer un nuevo id para el segundo letrero
-    document.getElementById("canvas-container").appendChild(preparateMensaje); // Agregar el segundo letrero al contenedor
+            // Crear un nuevo elemento para el segundo letrero
+            const preparateMensaje = document.createElement("div");
+            preparateMensaje.innerText = "PREPARATE";
+            preparateMensaje.style.position = "absolute";
+            preparateMensaje.style.top = "50%";
+            preparateMensaje.style.left = "50%";
+            preparateMensaje.style.transform = "translate(-50%, -50%)";
+            preparateMensaje.style.fontSize = "50px"; // Tamaño del texto
+            preparateMensaje.style.color = "red"; // Color del texto
+            preparateMensaje.style.textShadow = "2px 2px 5px black"; // Sombra del texto
+            preparateMensaje.id = "preparate"; // Establecer un nuevo id para el segundo letrero
+            document.getElementById("canvas-container").appendChild(preparateMensaje); // Agregar el segundo letrero al contenedor
 
-    // Reducir el tiempo restante en 1 segundo
-    tiempoqueresta--;
+            // Reducir el tiempo restante en 1 segundo
+            tiempoqueresta--;
 
-    // Desaparecer el letrero después de 5 segundos
-    setTimeout(function () {
-        preparateMensaje.remove();
-    }, 5000);
-}
+            // Desaparecer el letrero después de 5 segundos
+            setTimeout(function () {
+                preparateMensaje.remove();
+            }, 5000);
+        }
 
-// Llamar a la función actualizarTemporizador2 después de 1 minuto y 28 segundos
-setTimeout(actualizarTemporizador2, 88000); // 88000 milisegundos = 1 minuto y 28 segundos
-
-
-
-
+        // Llamar a la función actualizarTemporizador2 después de 1 minuto y 28 segundos
+        setTimeout(actualizarTemporizador2, 88000); // 88000 milisegundos = 1 minuto y 28 segundos
 
         updateCircles();
     </script>
