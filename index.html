@@ -19,7 +19,7 @@
             position: absolute;
             top: 80px;
             left: 10px;
-            font-family: Arial;
+            font-family: 'Trebuchet MS';
             font-size: 15px;
             color: white;
             z-index: 3;
@@ -294,7 +294,11 @@
                 context.closePath();
 
                 context.beginPath();
-                context.fillStyle = this.isGolden ? this.color : 'rgba(15, 80, 220, 0.5)';
+                context.fillStyle = this.isGolden
+                    ? this.color
+                    : this.isRed
+                        ? 'rgba(255, 0, 0, 0.5)'
+                        : 'rgba(15, 80, 220, 0.5)';
                 context.shadowColor = `hsla(${this.shadowOffset}, 100%, 50%, 1)`;
                 context.shadowBlur = 100;
                 context.strokeStyle = this.color;
@@ -391,7 +395,11 @@
         let goldenOnly = false;
         let allowRedBubbles = false; // Se define la variable para permitir burbujas rojas
 
+        const startTime = performance.now();
 
+        setTimeout(() => {
+            allowRedBubbles = true;
+        }, 177000);
         // Después de 60 segundos, cambia la variable para que las burbujas doradas ya no se generen
         setTimeout(() => {
             allowGoldenBubbles = false;
@@ -404,10 +412,6 @@
 
         // Después de 177 segundos, cambia la variable para permitir burbujas rojas
         setTimeout(() => {
-            allowRedBubbles = true;
-        }, 177000);
-
-        setTimeout(() => {
             goldenOnly = false;
         }, 177000);
 
@@ -416,12 +420,14 @@
             const randomRadius = Math.floor(Math.random() * 100 + 30);
             const randomSpeed = Math.random() * 3 + 1;
 
-            // Verificar si el tiempo transcurrido es mayor que 177 segundos
-            if (tiempoRestante > 177) {
-                const isRed = true;
+            // Calcular el tiempo absoluto transcurrido desde el inicio del juego en segundos
+            const elapsedTime = (performance.now() - startTime) / 1000;
+
+            // Verificar si el tiempo transcurrido es mayor que 177 segundos y si se permite la generación de burbujas rojas
+            if (elapsedTime > 177 && allowRedBubbles) {
                 const color = 'rgba(255, 0, 0, 0.7)';
                 const points = 500; // Asignar una cantidad fija de puntos para las burbujas rojas
-                const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, false, isRed);
+                const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, false, true);
                 arrayCircle.push(myCircle);
             } else {
                 // Si el tiempo transcurrido es menor o igual a 177 segundos, genera burbujas normales
@@ -559,13 +565,6 @@
                 nivelActual = 2;
             }
 
-            // Cambiar a Nivel 3 después de 177 segundos
-            if (tiempoTranscurrido === 177 && nivelActual === 2) {
-                const nivel = document.getElementById("nivel");
-                nivel.innerText = "Nivel 3";
-                nivelActual = 3;
-            }
-
         }
 
         // Iniciar el temporizador
@@ -606,6 +605,36 @@
 
         // Llamar a la función actualizarTemporizador2 después de 1 minuto y 28 segundos
         setTimeout(actualizarTemporizador2, 88000); // 88000 milisegundos = 1 minuto y 28 segundos
+
+        function mostrarLetreroFinal() {
+            const letrero = document.createElement('div');
+            letrero.id = 'letreroFinal';
+            letrero.style.position = 'absolute';
+            letrero.style.top = '50%';
+            letrero.style.left = '50%';
+            letrero.style.transform = 'translate(-50%, -50%)';
+            letrero.style.fontFamily = 'Trebuchet MS';
+            letrero.style.fontSize = '50px';
+            letrero.style.color = 'Red';
+            letrero.style.textAlign = 'center';
+            letrero.style.textShadow = '2px 5px 2px black';
+            letrero.style.zIndex = '5';
+            letrero.textContent = 'HAS LA MAYOR CANTIDAD DE PUNTOS';
+
+            document.body.appendChild(letrero);
+            // Temporizador para eliminar el letrero después de 5 segundos
+            setTimeout(() => {
+                document.body.removeChild(letrero);
+                // Cambiar el nivel a 3 después de mostrar el letrero final
+                const nivel = document.getElementById("nivel");
+                nivel.innerText = "Nivel 3";
+                nivelActual = 3;
+            }, 5000);
+        }
+
+
+        setTimeout(mostrarLetreroFinal, 165000);
+
 
         updateCircles();
     </script>
