@@ -237,7 +237,7 @@
         <div id="timer"
             style="position: absolute; top: 140px; right: 20px; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 15px; color: white; z-index: 3;">
             Tiempo restante: 1:00</div>
-        <button id="playButton">Reproducir música</button>
+
         <audio id="gameMusic" loop>
             <source src="Audio/Cancion.mp3" type="audio/mpeg">
 
@@ -265,8 +265,9 @@
         });
         window.addEventListener('resize', resizeCanvas);
 
+
         class Circle {
-            constructor(x, y, radius, color, text, speed, points, isGolden = false) {
+            constructor(x, y, radius, color, text, speed, points, isGolden = false, isRed = false) {
                 this.posx = x;
                 this.posy = y;
                 this.radius = radius;
@@ -278,6 +279,7 @@
                 this.colliding = false;
                 this.shadowOffset = 0;
                 this.isGolden = isGolden;
+                this.isRed = isRed;
                 this.points = points;
             }
 
@@ -386,33 +388,56 @@
 
         let firstClick = false;
         let allowGoldenBubbles = true;
+        let goldenOnly = false;
+        let allowRedBubbles = false; // Se define la variable para permitir burbujas rojas
+
 
         // Después de 60 segundos, cambia la variable para que las burbujas doradas ya no se generen
         setTimeout(() => {
             allowGoldenBubbles = false;
         }, 60000);
 
+        // Después de 110 segundos, cambia la variable para permitir solo burbujas doradas
+        setTimeout(() => {
+            goldenOnly = true;
+        }, 110000);
+
+        // Después de 177 segundos, cambia la variable para permitir burbujas rojas
+        setTimeout(() => {
+            allowRedBubbles = true;
+        }, 177000);
+
+        setTimeout(() => {
+            goldenOnly = false;
+        }, 177000);
 
         function addCircle() {
             const randomX = Math.random() * (canvas.width - 2 * 100) + 100;
             const randomRadius = Math.floor(Math.random() * 100 + 30);
             const randomSpeed = Math.random() * 3 + 1;
 
-            // Ajusta la probabilidad de burbujas doradas basado en allowGoldenBubbles
-            const isGolden = allowGoldenBubbles && Math.random() < 0.01;
-            const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
-
-            let points = 1;
-            if (isGolden) {
-                points = 50; // Puntos por una burbuja dorada
-                setTimeout(() => {
-                    allowGoldenBubbles = 1;
-                }, 110000);
+            // Verificar si el tiempo transcurrido es mayor que 177 segundos
+            if (tiempoRestante > 177) {
+                const isRed = true;
+                const color = 'rgba(255, 0, 0, 0.7)';
+                const points = 500; // Asignar una cantidad fija de puntos para las burbujas rojas
+                const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, false, isRed);
+                arrayCircle.push(myCircle);
+            } else {
+                // Si el tiempo transcurrido es menor o igual a 177 segundos, genera burbujas normales
+                const isGolden = goldenOnly || (allowGoldenBubbles && Math.random() < 0.02);
+                const color = isGolden ? 'rgba(255, 215, 0, 0.7)' : 'rgba(15, 80, 220, 0.5)';
+                let points = 1;
+                if (isGolden) {
+                    points = 50;
+                }
+                const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
+                arrayCircle.push(myCircle);
             }
-
-            const myCircle = new Circle(randomX, canvas.height + randomRadius, randomRadius, color, arrayCircle.length + 1, randomSpeed, points, isGolden);
-            arrayCircle.push(myCircle);
         }
+
+
+
 
         function updateCircles(timestamp) {
             const deltaTime = timestamp - lastTime;
@@ -494,6 +519,7 @@
         });
 
         let tiempoRestante = 60; // Tiempo en segundos
+        let nivelActual = 1; // Nivel actual
 
         function actualizarTemporizador() {
             const minutos = Math.floor(tiempoRestante / 60);
@@ -527,14 +553,25 @@
             }
 
             // Cambiar a Nivel 2 después de 60 segundos
-            if (tiempoRestante === 0) {
+            if (tiempoRestante === 0 && nivelActual === 1) {
                 const nivel = document.getElementById("nivel");
                 nivel.innerText = "Nivel 2";
+                nivelActual = 2;
             }
+
+            // Cambiar a Nivel 3 después de 177 segundos
+            if (tiempoTranscurrido === 177 && nivelActual === 2) {
+                const nivel = document.getElementById("nivel");
+                nivel.innerText = "Nivel 3";
+                nivelActual = 3;
+            }
+
         }
 
-        // Llamar a la función actualizarTemporizador cada segundo
+        // Iniciar el temporizador
         const intervaloTemporizador = setInterval(actualizarTemporizador, 1000);
+
+
 
         let tiempoqueresta = 88; // Cambiar a 88 segundos para que aparezca a los 1 minuto y 28 segundos
 
